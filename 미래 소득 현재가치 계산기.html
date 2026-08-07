@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="첫해 잉여현금, 증가율, 경제활동 기간, 할인율로 미래 소득의 현재가치를 계산합니다." />
+  <title>미래 소득 현재가치 계산기</title>
+  <style>
+    :root {
+      --ink: #18231f;
+      --muted: #68736e;
+      --paper: #f5f2ea;
+      --card: rgba(255, 255, 255, 0.78);
+      --line: rgba(24, 35, 31, 0.12);
+      --green: #174f3c;
+      --green-2: #236d55;
+      --mint: #d9eee4;
+      --coral: #ef765f;
+      --shadow: 0 24px 70px rgba(30, 55, 45, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 5% 4%, rgba(239, 118, 95, 0.14), transparent 31rem),
+        radial-gradient(circle at 93% 18%, rgba(35, 109, 85, 0.14), transparent 28rem),
+        var(--paper);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 64px 0 48px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 48px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 17px;
+      color: var(--green-2);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--coral);
+      box-shadow: 0 0 0 5px rgba(239, 118, 95, 0.14);
+    }
+
+    h1 {
+      max-width: 700px;
+      margin: 0;
+      font-family: Georgia, "Noto Serif KR", serif;
+      font-size: clamp(42px, 6vw, 76px);
+      font-weight: 500;
+      line-height: 1.04;
+      letter-spacing: -0.055em;
+    }
+
+    .intro {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+      word-break: keep-all;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(330px, 0.84fr) minmax(420px, 1.16fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .panel {
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .input-panel { padding: 30px; }
+
+    .panel-title {
+      margin: 0 0 6px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .panel-copy {
+      margin: 0 0 26px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .field { margin-top: 20px; }
+
+    .label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .input-wrap { position: relative; }
+
+    input {
+      width: 100%;
+      height: 54px;
+      padding: 0 58px 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      outline: none;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.82);
+      font-size: 17px;
+      font-weight: 720;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    input:focus {
+      border-color: var(--green-2);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(35, 109, 85, 0.11);
+    }
+
+    .unit {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .input-note {
+      min-height: 18px;
+      margin-top: 6px;
+      color: var(--green-2);
+      font-size: 12px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    button {
+      height: 52px;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform 140ms ease, filter 140ms ease;
+    }
+
+    button:hover { filter: brightness(1.04); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 3px solid rgba(239, 118, 95, 0.45); outline-offset: 2px; }
+
+    .calculate {
+      padding: 0 22px;
+      color: #fff;
+      background: var(--green);
+    }
+
+    .reset {
+      padding: 0 18px;
+      color: var(--muted);
+      background: rgba(24, 35, 31, 0.07);
+    }
+
+    .result-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      padding: 34px;
+      overflow: hidden;
+      color: #f8fbf9;
+      background:
+        linear-gradient(140deg, rgba(255,255,255,0.06), transparent 44%),
+        var(--green);
+    }
+
+    .result-panel::after {
+      content: "";
+      position: absolute;
+      right: -110px;
+      bottom: -150px;
+      width: 340px;
+      height: 340px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 50%;
+      box-shadow: 0 0 0 45px rgba(255,255,255,0.025), 0 0 0 90px rgba(255,255,255,0.018);
+      pointer-events: none;
+    }
+
+    .result-kicker {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgba(255,255,255,0.68);
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 0.05em;
+    }
+
+    .result-value {
+      position: relative;
+      z-index: 1;
+      margin: 16px 0 8px;
+      font-family: Georgia, "Noto Serif KR", serif;
+      font-size: clamp(43px, 6vw, 70px);
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: -0.055em;
+      word-break: keep-all;
+    }
+
+    .result-exact {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgba(255,255,255,0.66);
+      font-size: 14px;
+    }
+
+    .metric-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .metric {
+      padding: 17px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 17px;
+      background: rgba(255,255,255,0.07);
+    }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 7px;
+      color: rgba(255,255,255,0.62);
+      font-size: 12px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .formula {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      padding-top: 26px;
+      color: rgba(255,255,255,0.66);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .details {
+      margin-top: 20px;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    details > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 26px;
+      cursor: pointer;
+      list-style: none;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::after {
+      content: "+";
+      color: var(--green-2);
+      font-size: 24px;
+      font-weight: 400;
+    }
+
+    details[open] > summary::after { content: "−"; }
+
+    .table-wrap {
+      max-height: 430px;
+      overflow: auto;
+      border-top: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th, td {
+      padding: 13px 26px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      font-size: 13px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      color: var(--muted);
+      background: #f8f7f2;
+      font-weight: 750;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    .footnote {
+      margin: 22px 4px 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+      text-align: center;
+    }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: #902f20;
+      background: rgba(239, 118, 95, 0.14);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .error.visible { display: block; }
+
+    @media (max-width: 820px) {
+      .shell { padding-top: 40px; }
+      header, .workspace { grid-template-columns: 1fr; }
+      header { gap: 20px; }
+      .intro { max-width: 630px; }
+    }
+
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 20px, 1120px); padding: 28px 0; }
+      h1 { font-size: 42px; }
+      .input-panel, .result-panel { padding: 23px; border-radius: 22px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .actions { grid-template-columns: 1fr; }
+      .reset { order: 2; }
+      th, td { padding: 12px 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <div class="eyebrow">Personal income valuation</div>
+        <h1>미래 소득의<br />오늘 가치는?</h1>
+      </div>
+      <p class="intro">
+        앞으로 남길 수 있는 돈을 연도별로 예상하고, 각각을 오늘의 가치로 환산합니다.
+        네 가지 숫자를 바꾸며 결과가 어떻게 달라지는지 확인해 보세요.
+      </p>
+    </header>
+
+    <section class="workspace" aria-label="현재가치 계산기">
+      <form class="panel input-panel" id="calculator" novalidate>
+        <h2 class="panel-title">계산 조건</h2>
+        <p class="panel-copy">금액은 세후 소득에서 생활비를 뺀 연간 잉여현금을 권장합니다.</p>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="cashflow">첫해 잉여현금</label>
+            <span class="hint">예: 20,000,000</span>
+          </div>
+          <div class="input-wrap">
+            <input id="cashflow" name="cashflow" type="text" inputmode="numeric" value="20,000,000" autocomplete="off" aria-describedby="cashflow-note" />
+            <span class="unit">원</span>
+          </div>
+          <div class="input-note" id="cashflow-note">2,000만원</div>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="growth">연간 증가율</label>
+            <span class="hint">소득·잉여현금 성장</span>
+          </div>
+          <div class="input-wrap">
+            <input id="growth" name="growth" type="number" inputmode="decimal" value="2" min="-50" max="100" step="0.1" />
+            <span class="unit">%</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="years">예상 경제활동 기간</label>
+            <span class="hint">1~80년</span>
+          </div>
+          <div class="input-wrap">
+            <input id="years" name="years" type="number" inputmode="numeric" value="25" min="1" max="80" step="1" />
+            <span class="unit">년</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="discount">할인율</label>
+            <span class="hint">시간가치·물가·위험 반영</span>
+          </div>
+          <div class="input-wrap">
+            <input id="discount" name="discount" type="number" inputmode="decimal" value="6" min="-50" max="100" step="0.1" />
+            <span class="unit">%</span>
+          </div>
+        </div>
+
+        <div class="error" id="error" role="alert"></div>
+
+        <div class="actions">
+          <button class="calculate" type="submit">현재가치 계산하기</button>
+          <button class="reset" type="button" id="reset">초기화</button>
+        </div>
+      </form>
+
+      <section class="panel result-panel" aria-live="polite" aria-atomic="true">
+        <p class="result-kicker">미래 잉여현금의 현재가치</p>
+        <div class="result-value" id="result-compact">—</div>
+        <p class="result-exact" id="result-exact">조건을 입력하면 결과가 표시됩니다.</p>
+
+        <div class="metric-grid">
+          <div class="metric">
+            <span class="metric-label">미래 명목 잉여현금 합계</span>
+            <strong class="metric-value" id="nominal-total">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">할인으로 줄어든 금액</span>
+            <strong class="metric-value" id="discount-gap">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">마지막 해 잉여현금</span>
+            <strong class="metric-value" id="last-cashflow">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">현재가치 / 명목합계</span>
+            <strong class="metric-value" id="pv-ratio">—</strong>
+          </div>
+        </div>
+
+        <p class="formula">
+          각 연도의 현재가치 = 해당 연도 잉여현금 ÷ (1 + 할인율)<sup>연도</sup><br />
+          최종 결과는 모든 연도의 현재가치를 합산한 금액입니다.
+        </p>
+      </section>
+    </section>
+
+    <details class="panel details">
+      <summary>연도별 계산 내역 보기</summary>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">연도</th>
+              <th scope="col">예상 잉여현금</th>
+              <th scope="col">할인계수</th>
+              <th scope="col">현재가치</th>
+            </tr>
+          </thead>
+          <tbody id="yearly-rows"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <p class="footnote">
+      이 결과는 입력한 가정에 따른 단순 추정치이며 실제 미래 소득을 보장하지 않습니다.
+      명목 증가율을 입력했다면 명목 할인율을, 물가를 제외한 실질 증가율을 입력했다면 실질 할인율을 사용하세요.
+    </p>
+  </main>
+
+  <script>
+    const form = document.querySelector('#calculator');
+    const cashflowInput = document.querySelector('#cashflow');
+    const growthInput = document.querySelector('#growth');
+    const yearsInput = document.querySelector('#years');
+    const discountInput = document.querySelector('#discount');
+    const cashflowNote = document.querySelector('#cashflow-note');
+    const errorBox = document.querySelector('#error');
+
+    const won = new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW',
+      maximumFractionDigits: 0
+    });
+
+    const plainNumber = new Intl.NumberFormat('ko-KR', {
+      maximumFractionDigits: 0
+    });
+
+    function parseWon(value) {
+      return Number(String(value).replace(/[^0-9.-]/g, ''));
+    }
+
+    function formatKoreanAmount(value) {
+      if (!Number.isFinite(value)) return '—';
+      const sign = value < 0 ? '-' : '';
+      const absolute = Math.abs(Math.round(value));
+      const eok = Math.floor(absolute / 100000000);
+      const man = Math.floor((absolute % 100000000) / 10000);
+      const wonRemainder = absolute % 10000;
+      const parts = [];
+
+      if (eok) parts.push(`${plainNumber.format(eok)}억`);
+      if (man) parts.push(`${plainNumber.format(man)}만`);
+      if (!eok && !man && wonRemainder) parts.push(plainNumber.format(wonRemainder));
+      if (!parts.length) return '0원';
+      return `${sign}${parts.join(' ')}원`;
+    }
+
+    function validate(cashflow, growth, years, discount) {
+      if (!Number.isFinite(cashflow) || cashflow < 0) return '첫해 잉여현금은 0원 이상의 숫자로 입력해 주세요.';
+      if (!Number.isFinite(growth) || growth <= -100) return '증가율은 -100%보다 크게 입력해 주세요.';
+      if (!Number.isInteger(years) || years < 1 || years > 80) return '경제활동 기간은 1년부터 80년 사이의 정수로 입력해 주세요.';
+      if (!Number.isFinite(discount) || discount <= -100) return '할인율은 -100%보다 크게 입력해 주세요.';
+      return '';
+    }
+
+    function calculate() {
+      const firstCashflow = parseWon(cashflowInput.value);
+      const growth = Number(growthInput.value) / 100;
+      const years = Number(yearsInput.value);
+      const discount = Number(discountInput.value) / 100;
+      const message = validate(firstCashflow, growth, years, discount);
+
+      if (message) {
+        errorBox.textContent = message;
+        errorBox.classList.add('visible');
+        return;
+      }
+
+      errorBox.textContent = '';
+      errorBox.classList.remove('visible');
+
+      let presentValue = 0;
+      let nominalTotal = 0;
+      let cashflow = firstCashflow;
+      const rows = [];
+
+      for (let year = 1; year <= years; year += 1) {
+        const factor = 1 / Math.pow(1 + discount, year);
+        const discountedCashflow = cashflow * factor;
+        nominalTotal += cashflow;
+        presentValue += discountedCashflow;
+
+        rows.push(`
+          <tr>
+            <td>${year}년 차</td>
+            <td>${won.format(cashflow)}</td>
+            <td>${factor.toFixed(4)}</td>
+            <td>${won.format(discountedCashflow)}</td>
+          </tr>
+        `);
+
+        cashflow *= (1 + growth);
+      }
+
+      const lastCashflow = firstCashflow * Math.pow(1 + growth, years - 1);
+      const gap = nominalTotal - presentValue;
+      const ratio = nominalTotal === 0 ? 0 : presentValue / nominalTotal;
+
+      document.querySelector('#result-compact').textContent = formatKoreanAmount(presentValue);
+      document.querySelector('#result-exact').textContent = `${won.format(presentValue)} · ${years}년 기준`;
+      document.querySelector('#nominal-total').textContent = formatKoreanAmount(nominalTotal);
+      document.querySelector('#discount-gap').textContent = formatKoreanAmount(gap);
+      document.querySelector('#last-cashflow').textContent = formatKoreanAmount(lastCashflow);
+      document.querySelector('#pv-ratio').textContent = `${(ratio * 100).toFixed(1)}%`;
+      document.querySelector('#yearly-rows').innerHTML = rows.join('');
+    }
+
+    function updateCashflowDisplay() {
+      const value = parseWon(cashflowInput.value);
+      if (Number.isFinite(value)) {
+        cashflowInput.value = plainNumber.format(value);
+        cashflowNote.textContent = formatKoreanAmount(value);
+      } else {
+        cashflowNote.textContent = '';
+      }
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      updateCashflowDisplay();
+      calculate();
+    });
+
+    [growthInput, yearsInput, discountInput].forEach((input) => {
+      input.addEventListener('input', calculate);
+    });
+
+    cashflowInput.addEventListener('input', () => {
+      const value = parseWon(cashflowInput.value);
+      cashflowNote.textContent = Number.isFinite(value) ? formatKoreanAmount(value) : '';
+      calculate();
+    });
+
+    cashflowInput.addEventListener('blur', updateCashflowDisplay);
+
+    document.querySelector('#reset').addEventListener('click', () => {
+      cashflowInput.value = '20,000,000';
+      growthInput.value = '2';
+      yearsInput.value = '25';
+      discountInput.value = '6';
+      updateCashflowDisplay();
+      calculate();
+    });
+
+    updateCashflowDisplay();
+    calculate();
+  </script>
+</body>
+</html>
