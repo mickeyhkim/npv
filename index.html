@@ -565,13 +565,6 @@
       return `${sign}${parts.join(' ')}원`;
     }
 
-    function validate(cashflow, growth, years, discount) {
-      if (!Number.isFinite(cashflow) || cashflow < 0) return '첫해 잉여현금은 0원 이상의 숫자로 입력해 주세요.';
-      if (!Number.isFinite(growth) || growth <= -100) return '증가율은 -100%보다 크게 입력해 주세요.';
-      if (!Number.isInteger(years) || years < 1 || years > 80) return '경제활동 기간은 1년부터 80년 사이의 정수로 입력해 주세요.';
-      if (!Number.isFinite(discount) || discount <= -100) return '할인율은 -100%보다 크게 입력해 주세요.';
-      return '';
-    }
 
     function calculate() {
       const firstCashflow = parseWon(cashflowInput.value);
