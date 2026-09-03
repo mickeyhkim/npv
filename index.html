@@ -1,3 +1,5 @@
+
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
@@ -413,7 +415,7 @@
         <h1>미래소득의 현재가치 계산기</h1>
         <p>
        자세한 사용법을 소개한 <strong><a href="https://www.youtube.com/@MickeyPedia" target="_blank" rel="noopener noreferrer">
-다음 미키피디아 영상</a></strong>을</br>먼저 보실 것을 추천합니다.
+다음 미키피디아 영상</a></strong>을<br>먼저 보실 것을 추천합니다.
       </p>
       </div>
       
@@ -430,7 +432,7 @@
             <span class="hint">예: 20,000,000</span>
           </div>
           <div class="input-wrap">
-            <input id="cashflow" name="cashflow" type="text" inputmode="numeric" autocomplete="off" aria-describedby="cashflow-note" />
+            <input id="cashflow" name="cashflow" type="text" inputmode="numeric" autocomplete="off" value="20,000,000" aria-describedby="cashflow-note" />
             <span class="unit">원</span>
           </div>
           <div class="input-note" id="cashflow-note">2,000만원</div>
@@ -442,7 +444,7 @@
             <span class="hint">소득·잉여현금 성장</span>
           </div>
           <div class="input-wrap">
-            <input id="growth" name="growth" type="number" inputmode="decimal" min="-50" max="100" step="0.1" />
+            <input id="growth" name="growth" type="number" inputmode="decimal" min="-50" max="100" step="0.1" value="2" />
             <span class="unit">%</span>
           </div>
         </div>
@@ -453,7 +455,7 @@
             <span class="hint">1~80년</span>
           </div>
           <div class="input-wrap">
-            <input id="years" name="years" type="number" inputmode="numeric" min="1" max="80" step="1" />
+            <input id="years" name="years" type="number" inputmode="numeric" min="1" max="80" step="1" value="25" />
             <span class="unit">년</span>
           </div>
         </div>
@@ -464,7 +466,7 @@
             <span class="hint">시간가치·물가·위험 반영</span>
           </div>
           <div class="input-wrap">
-            <input id="discount" name="discount" type="number" inputmode="decimal" min="-50" max="100" step="0.1" />
+            <input id="discount" name="discount" type="number" inputmode="decimal" min="-50" max="100" step="0.1" value="6" />
             <span class="unit">%</span>
           </div>
         </div>
@@ -565,6 +567,45 @@
       if (!eok && !man && wonRemainder) parts.push(plainNumber.format(wonRemainder));
       if (!parts.length) return '0원';
       return `${sign}${parts.join(' ')}원`;
+    }
+
+    function validate(firstCashflow, growth, years, discount) {
+      if (
+        cashflowInput.value.trim() === '' ||
+        !Number.isFinite(firstCashflow) ||
+        firstCashflow < 0
+      ) {
+        return '첫해 잉여현금을 올바르게 입력해주세요.';
+      }
+
+      if (
+        growthInput.value.trim() === '' ||
+        !Number.isFinite(growth) ||
+        growth < -0.5 ||
+        growth > 1
+      ) {
+        return '연간 증가율은 -50%에서 100% 사이로 입력해주세요.';
+      }
+
+      if (
+        yearsInput.value.trim() === '' ||
+        !Number.isInteger(years) ||
+        years < 1 ||
+        years > 80
+      ) {
+        return '경제활동 기간은 1년에서 80년 사이의 정수로 입력해주세요.';
+      }
+
+      if (
+        discountInput.value.trim() === '' ||
+        !Number.isFinite(discount) ||
+        discount < -0.5 ||
+        discount > 1
+      ) {
+        return '할인율은 -50%에서 100% 사이로 입력해주세요.';
+      }
+
+      return '';
     }
 
 
